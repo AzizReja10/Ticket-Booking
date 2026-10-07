@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: flash-postgres
+    environment:
+      POSTGRES_DB: flashsale
+      POSTGRES_USER: flash
+      POSTGRES_PASSWORD: flash123
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    container_name: flash-redis
+    ports:
+      - "6379:6379"
