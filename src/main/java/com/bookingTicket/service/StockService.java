@@ -24,7 +24,7 @@ public class StockService {
     {
         return "event: "+eventId+" :holds";
     }
-    private DefaultRedisScript<Long> load(String Path)
+    private DefaultRedisScript<Long> load(String path)
     {
         DefaultRedisScript<Long> s=new DefaultRedisScript<>();
         s.setLocation((new ClassPathResource(path)));
@@ -93,10 +93,11 @@ public class StockService {
     public void confirmHold(Long eventId,String userId)
     {
         Long result=redis.execute(confirmScript,List.of(holdsKey(eventId)),userId);
+        System.out.println("CONFIRM RESULT = " + result);
         if(result==null||result<0)
             throw new HoldExpiredException();
     }
-    public Long releasedExpired(Long eventId)
+    public Long releaseExpired(Long eventId)
     {
         Long n=redis.execute(releaseExpiredScript,
                 List.of(stockKey(eventId),usersKey(eventId),holdsKey(eventId))
