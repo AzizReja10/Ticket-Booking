@@ -30,6 +30,11 @@ public class HoldBookingService {
             throw new RequestInProgressException();
         try
         {
+            var existing=bookingRepository.findFirstByEventIdAndUserIdAndStatus(eventId,userId,BookingStatus.CONFIRMED);
+            if(existing.isPresent())
+            {
+                return existing.get();
+            }
             stockService.confirmHold(eventId,userId);
             try
             {
