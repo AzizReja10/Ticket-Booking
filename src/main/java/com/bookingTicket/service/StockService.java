@@ -104,4 +104,9 @@ public class StockService {
                 );
         return n==null?0:n;
     }
+    public long getStock(Long eventId)
+    {
+        String v=redis.opsForValue().get(stockKey(eventId));
+        return v==null?-1:Long.parseLong(v);
+    }
 }

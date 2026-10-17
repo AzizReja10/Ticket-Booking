@@ -14,3 +14,12 @@ services:
     container_name: flash-redis
     ports:
       - "6379:6379"
+  nginx:
+    image: nginx:1.27
+    container_name: flash-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

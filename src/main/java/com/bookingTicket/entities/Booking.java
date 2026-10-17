@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 @Entity
-@Table(name="bookings",indexes = @Index(name="idx_booking_event",columnList = "eventId"))
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

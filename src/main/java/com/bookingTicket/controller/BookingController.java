@@ -5,6 +5,7 @@ import com.bookingTicket.entities.Event;
 import com.bookingTicket.exceptions.AlreadyBookedException;
 import com.bookingTicket.exceptions.HoldExpiredException;
 import com.bookingTicket.exceptions.SoldOutException;
+import com.bookingTicket.repository.BookingRepository;
 import com.bookingTicket.repository.EventRepository;
 import com.bookingTicket.service.HoldBookingService;
 import com.bookingTicket.service.NaiveBookingsService;
@@ -16,12 +17,14 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api")
 public class BookingController {
+    private final BookingRepository bookingRepository;
     private final StockService stockService;
     private final RedisBookingService redisBookingService;
     private final EventRepository eventRepository;
     private final NaiveBookingsService naiveBookingsService;
     private final HoldBookingService holdBookingService;
-    public BookingController(StockService stockService, RedisBookingService redisBookingService, EventRepository eventRepository, NaiveBookingsService naiveBookingsService, HoldBookingService holdBookingService) {
+    public BookingController(BookingRepository bookingRepository, StockService stockService, RedisBookingService redisBookingService, EventRepository eventRepository, NaiveBookingsService naiveBookingsService, HoldBookingService holdBookingService) {
+        this.bookingRepository = bookingRepository;
         this.stockService = stockService;
         this.redisBookingService = redisBookingService;
         this.eventRepository = eventRepository;
@@ -52,12 +55,6 @@ public class BookingController {
     public Booking book(@PathVariable Long eventId, @RequestParam String userId) {
         return naiveBookingsService.book(eventId, userId);
     }
-
-    @ExceptionHandler(AlreadyBookedException.class)
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public String handleAlready(AlreadyBookedException e) {
-        return e.getMessage();
-    }
     public record HoldResponse(long expiresAtEpochMs){}
     @PostMapping("/events/{eventId}/hold")
     public HoldResponse hold(@PathVariable Long eventId,@RequestParam String userId)
@@ -69,10 +66,14 @@ public class BookingController {
     {
         return holdBookingService.confirm(eventId,userId);
     }
-    @ExceptionHandler(HoldExpiredException.class)
-    @ResponseStatus(HttpStatus.GONE)
-    public  String handleExpired(HoldExpiredException e)
+    public record StatsResponse(long redisStock,long confirmedBookings)
+    {}
+    @GetMapping("/events/{eventId}/stats")
+    public StatsResponse stats(@PathVariable Long eventId)
     {
-        return e.getMessage();
+        return new StatsResponse(
+                stockService.getStock(eventId),
+                bookingRepository.countByEventId(eventId)
+        );
     }
 }
