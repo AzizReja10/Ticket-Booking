@@ -308,3 +308,22 @@ Run a single test with `mvn test -Dtest=LoadThroughNginxTest`.
 - **Schema management.** Tables are created by Hibernate (`ddl-auto: update`).
   A real deployment would use migrations such as Flyway.
 - **No authentication.** `userId` is a plain query parameter.
+## Demo UI
+
+A small React app (Vite, Tailwind, Framer Motion) to watch the system work:
+create an event, hold and confirm a seat with a live countdown, or run a
+flash-sale simulation and see seats fill, results arrive and traffic split
+across the three instances.
+
+``bash
+cd frontend
+npm install
+npm run dev
+``
+
+Open http://localhost:5173. The Docker stack must be running; the dev server
+proxies /api to Nginx on port 8080.
+
+The simulator sends requests from the browser, which limits how many run at
+once, so it is a fast burst, not 1,000 truly simultaneous requests. The
+Java load test is the simultaneous case.
