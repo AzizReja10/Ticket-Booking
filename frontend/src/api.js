@@ -3,16 +3,15 @@
 const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '') + '/api'
 
 async function call(path, options) {
-  const res = await fetch(BASE + path, options)
-  const res = await fetch('/api' + path, options)
-  const servedBy = res.headers.get('X-Served-By')
+  const res = await fetch(BASE + path, options);
+  const servedBy = res.headers.get('X-Served-By');
 
-  const text = await res.text()
+  const text = await res.text();
   let body
   try {
-    body = JSON.parse(text)
+    body = JSON.parse(text);
   } catch {
-    body = text // e.g. the plain-text "Sold Out" from a 409
+    body = text; // e.g. the plain-text "Sold Out" from a 409
   }
   return { status: res.status, servedBy, body }
 }
