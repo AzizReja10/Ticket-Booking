@@ -1,3 +1,10 @@
+x-app-env: &app-env
+  SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/flashsale
+  SPRING_DATASOURCE_USERNAME: flash
+  SPRING_DATASOURCE_PASSWORD: flash123
+  SPRING_DATA_REDIS_HOST: redis
+  SERVER_PORT: "8080"
+
 services:
   postgres:
     image: postgres:16
@@ -8,12 +15,64 @@ services:
       POSTGRES_PASSWORD: flash123
     ports:
       - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flash -d flashsale"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
 
   redis:
     image: redis:7
     container_name: flash-redis
     ports:
       - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  app1:
+    build: .
+    image: flashsale-app
+    container_name: flash-app1
+    environment:
+      <<: *app-env
+      INSTANCE_ID: instance-1
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c 'exec 3<>/dev/tcp/127.0.0.1/8080'"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  app2:
+    image: flashsale-app
+    container_name: flash-app2
+    environment:
+      <<: *app-env
+      INSTANCE_ID: instance-2
+    depends_on:
+      app1:
+        condition: service_healthy
+
+  app3:
+    image: flashsale-app
+    container_name: flash-app3
+    environment:
+      <<: *app-env
+      INSTANCE_ID: instance-3
+    depends_on:
+      app1:
+        condition: service_healthy
+
   nginx:
     image: nginx:1.27
     container_name: flash-nginx
@@ -21,5 +80,10 @@ services:
       - "8080:80"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    depends_on:
+      - app1
+      - app2
+      - app3
+
+volumes:
+  pgdata:

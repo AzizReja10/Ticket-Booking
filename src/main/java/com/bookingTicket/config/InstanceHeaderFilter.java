@@ -12,12 +12,14 @@ import java.io.IOException;
 
 @Component
 public class InstanceHeaderFilter extends OncePerRequestFilter {
-    @Value("${server.port}")
-    private String port;
+    @Value("${INSTANCE_ID:instance-${server.port}}")
+    private String instanceId;
+
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException
-    {
-        res.setHeader("X-Served-By","instance-"+port);
-        chain.doFilter(req,res);
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        response.setHeader("X-Served-By", instanceId);
+        chain.doFilter(request, response);
     }
 }

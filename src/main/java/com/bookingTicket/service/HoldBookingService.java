@@ -5,6 +5,7 @@ import com.bookingTicket.exceptions.RequestInProgressException;
 import com.bookingTicket.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -44,11 +45,16 @@ public class HoldBookingService {
                         .status(BookingStatus.CONFIRMED)
                         .createdAt(Instant.now())
                         .build());
-            } catch (Exception e) {
-                stockService.release(eventId,userId);
-                throw new RuntimeException(e);
+            } catch (DataIntegrityViolationException e) {
+                return bookingRepository
+                        .findFirstByEventIdAndUserIdAndStatus(eventId, userId, BookingStatus.CONFIRMED)
+                        .orElseThrow(() -> e);
             }
-        }finally {
+        }catch (RuntimeException e) {
+            stockService.release(eventId, userId);
+            throw e;
+        }
+        finally {
             lockService.unlock(lockName,token);
         }
     }
