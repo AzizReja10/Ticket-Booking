@@ -34,7 +34,11 @@ public class BookingController {
 
     public record CreateEventRequest(String name, int totalSeats) {
     }
-
+    @GetMapping("/health")
+    public String healthCheck()
+    {
+        return "running";
+    }
     @PostMapping("/events")
     public Event createEvent(@RequestBody CreateEventRequest req) {
         Event event = eventRepository.save(Event.builder()
